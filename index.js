@@ -1,6 +1,15 @@
 var express = require('express');
 var app = express();
-var extractor = require('./scripts/extractor.js');
+var validURL = require('valid-url');
+var mongowrap = require('./scripts/mongowrap.js');
+var urlCounter = 0;
+
+// Use connect method to connect to the Server
+// Initial query to mongodb to check the # of existing urls.
+mongowrap.getSize(function(size) {
+  urlCounter = size;
+  console.log("URL COUNTER IS " + urlCounter);
+});
 
 app.set('port', (process.env.PORT || 5000));
 app.use(express.static(__dirname + '/public'));
@@ -13,13 +22,25 @@ app.get('/', function(request, response) {
   response.render('pages/index');
 });
 
-app.get('/api/whoami/', function(request, response) {
-  var respObject = {"ipaddress": null, "language":null, "software": null};
-  console.log(request.headers);
-  respObject.ipaddress = request.headers['x-forwarded-for'];
-  respObject.language = extractor.parseLanguage(request.headers['x-language']||request.headers['accept-language']);
-  respObject.software = extractor.parseOS(request.headers['user-agent']);
-  response.send(respObject);
+app.get('/new/*', function(request, response) {
+  // Process the url into mongodb.
+  if (validURL.isUri(request.params['0'])) {
+    mongowrap.addEntry(urlCounter, request.params['0'], function(shortID) {
+      urlCounter++;
+      var temp = {'original_url':request.params['0'], 'short_url': 'https://url-shortener-decky.herokuapp.com/' + shortID};
+      response.send(temp);
+    });
+  } else {
+    // Not valid URL, send Error
+    response.send({"ERROR": "Invalid URL"});
+  }
+});
+
+app.get('/:INTEGER', function(request, response) {
+  // Retrieve the original url from the db and send the page to the user.
+  mongowrap.retrieveEntry(parseInt(request.params.INTEGER), function(fullURL) {
+    response.redirect(fullURL);
+  });
 });
 
 app.listen(app.get('port'), function() {

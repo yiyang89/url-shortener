@@ -9,12 +9,17 @@
 
 <div class="jumbotron text-center Aligner">
   <div class="container">
-    <h1>Header Parser Microservice</h1>
+    <h1>Url Shortener Service</h1>
     <p>
-      This application responds to only 1 api call at /api/whoami/
+      Shorten a URL with /new/YOUR_URL_HERE.
+      <br />
+      Your link MUST contain the http:// or https:// component.
       <br />
       <br />
-      A JSON object containing your IP address, language, and operating system will be returned.
+      A JSON object containing the original url and the shortened URL will be returned.
+      <br />
+      <br />
+      Future optimizations: check db for existing entry.
     </p>
   </div>
 </div>
