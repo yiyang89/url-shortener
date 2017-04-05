@@ -23,6 +23,7 @@ app.get('/', function(request, response) {
 });
 
 app.get('/new/*', function(request, response) {
+  console.log("Received a get request to /new");
   // Process the url into mongodb.
   if (validURL.isUri(request.params['0'])) {
     mongowrap.addEntry(urlCounter, request.params['0'], function(shortID) {
@@ -38,9 +39,21 @@ app.get('/new/*', function(request, response) {
 
 app.get('/:INTEGER', function(request, response) {
   // Retrieve the original url from the db and send the page to the user.
-  mongowrap.retrieveEntry(parseInt(request.params.INTEGER), function(fullURL) {
-    response.redirect(fullURL);
-  });
+  console.log("Received a get request to /:Integer");
+  // Check if request.params.INTEGER can be parsed to an int
+  // Bit of a monkey patch because any request to the server (even /) results
+  //  in a call to this get.
+  console.log(request.params.INTEGER);
+  if (request.params.INTEGER!=='' && !isNaN(parseInt(request.params.INTEGER))) {
+    mongowrap.retrieveEntry(parseInt(request.params.INTEGER), function(result) {
+      // If failed to retrieve anything, redirect user
+      if (result) {
+        response.redirect(result.url);
+      } else {
+        response.render('pages/fail');
+      }
+    });
+  }
 });
 
 app.listen(app.get('port'), function() {

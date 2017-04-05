@@ -46,9 +46,10 @@ module.exports.retrieveEntry = function(entryID, callback) {
         if (err) {
           console.log(err);
         } else {
+          // If no results found, redirect to a page notifying user
           console.log(result);
           db.close();
-          callback(result[0].url);
+          callback(result[0]);
         }
       });
     }
